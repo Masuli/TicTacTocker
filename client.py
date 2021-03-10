@@ -30,7 +30,7 @@ def run_game_logic(sock):
     render_board(board)
     try:
         recv_data = sock.recv(256)
-        data = recv_data.split(",")
+        data = recv_data.decode().split(",")
         if data[0] == "Role":
             role = data[1]
         elif data[0] == "Stats":
@@ -57,6 +57,7 @@ def run_game_logic(sock):
 
             if x < 3 and y < 3 and x >= 0 and y >= 0 and get_board_value(board, x, y) == " ":
                 set_board_value(board, x, y, role)
+                sock.sendall("Move,{},{}".format(x, y).encode())
             else:
                 print("Invalid Board Position!!")
     except:
@@ -71,8 +72,7 @@ def run_tick_tack_tocker():
     if len(username) > 1 and len(password) > 1:
         try:
             sock.connect(server_address)
-            message = 'Login,{},{}'.format(username, password)
-            sock.sendall(message)
+            sock.sendall("Login,{},{}".format(username, password).encode())
             sock.recv(256)
             run_game_logic(sock)
         except: 
