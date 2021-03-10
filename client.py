@@ -28,40 +28,43 @@ def run_game_logic(sock):
     board = []
     initialize_board(board)
     render_board(board)
-    try:
-        recv_data = sock.recv(256)
-        data = recv_data.decode().split(",")
-        if data[0] == "Role":
-            role = data[1]
-        elif data[0] == "Stats":
-            if data[1] == "W":
-                print("You Won :) Your stats: Wins: {}, Losses: {}")
-            else:
-                print("You Lost :( Your stats: Wins: {}, Losses: {}")
+    while True:
+        try:
+            recv_data = sock.recv(256)
+            data = recv_data.decode().split(",")
+            if data[0] == "Role":
+                role = data[1]
+            elif data[0] == "Stats":
+                if data[1] == "W":
+                    print("You Won :) Your stats: Wins: {}, Losses: {}")
+                else:
+                    print("You Lost :( Your stats: Wins: {}, Losses: {}")
+                input("Press Enter to continue...")
+                return
+            elif data[0] == "Move":
+                if role == 'X':
+                    set_board_value(board, int(data[1]), int(data[2]), 'O')
+                else:
+                    set_board_value(board, int(data[1]), int(data[2]), 'X')
+                render_board(board)
+            elif data[0] == "Turn":
+                try:
+                    x = int(input("Move to X: "))
+                    y = int(input("Move to Y: "))
+                    if x >= 3 or y >= 3 or x < 0 or y < 0 or  get_board_value(board, x, y) != " ":
+                        raise ValueError("")
+                except ValueError:
+                    print("Invalid Position or entered value!")
+
+                if x < 3 and y < 3 and x >= 0 and y >= 0 and get_board_value(board, x, y) == " ":
+                    set_board_value(board, x, y, role)
+                    sock.sendall("Move,{},{}".format(x, y).encode())
+                else:
+                    print("Invalid Board Position!!")
+        except:
+            print("Error occurred!")
             input("Press Enter to continue...")
             return
-        elif data[0] == "Move":
-            if role == 'X':
-                set_board_value(board, int(data[1]), int(data[2]), 'O')
-            else:
-                set_board_value(board, int(data[1]), int(data[2]), 'X')
-            render_board(board)
-        elif data[0] == "Turn":
-            try:
-                x = int(input("Move to X: "))
-                y = int(input("Move to Y: "))
-                if x >= 3 or y >= 3 or x < 0 or y < 0 or  get_board_value(board, x, y) != " ":
-                    raise ValueError("")
-            except ValueError:
-                print("Invalid Position or entered value!")
-
-            if x < 3 and y < 3 and x >= 0 and y >= 0 and get_board_value(board, x, y) == " ":
-                set_board_value(board, x, y, role)
-                sock.sendall("Move,{},{}".format(x, y).encode())
-            else:
-                print("Invalid Board Position!!")
-    except:
-        pass
 
 def run_tick_tack_tocker():
     server_address = ('localhost', 1999)
@@ -73,7 +76,8 @@ def run_tick_tack_tocker():
         try:
             sock.connect(server_address)
             sock.sendall("Login,{},{}".format(username, password).encode())
-            sock.recv(256)
+            data = sock.recv(256)
+            print(data.decode())
             run_game_logic(sock)
         except: 
             print("Failed to connect to server.")
