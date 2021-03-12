@@ -54,6 +54,7 @@ def handle_packet(sock, packet_data):
             except ValueError:
                 print("Invalid Position or entered value!")
         set_board_value(x, y, role)
+        render_board()
         sock.sendall("Move,{},{}".format(x, y).encode())
 
 def recv_and_handle_packets(sock):
@@ -69,12 +70,13 @@ def run_game_logic(sock):
         try:
             recv_and_handle_packets(sock)
         except Exception as e:
-            print("Error occurred! {}".format(e))
+            print("Fatal error {}".format(e))
             input("Press Enter to continue...")
             return
 
 def wait_for_game(sock):
     print("Waiting for opponent...")
+    global role
     while True:
         recv_data = sock.recv(256)
         whole_packets = recv_data.decode().split("\n")

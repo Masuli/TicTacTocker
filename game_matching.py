@@ -2,6 +2,8 @@ import socket
 import sys
 import random
 import os
+import threading
+
 
 GAME_MATCHING_PORT = 1999
 GAME_STATS_PORT = 1998
@@ -9,7 +11,8 @@ available_ports = [i for i in range(2000, 3000)]
 
 def start_game_matching():
     available_players = []
-    
+    game_instances = []
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = ("localhost", GAME_MATCHING_PORT)
     sock.bind(server_address)
@@ -34,9 +37,13 @@ def start_game_matching():
         available_players.append((connection, credentials[0]))
         if len(available_players) >= 2:
             print("GAME_MATCHING: 2 players found")
-            create_game_instance("localhost", available_players[0], available_players[1], available_ports.pop(0))
-            #del available_players[:2]
+            #create_game_instance("localhost", available_players[0], available_players[1], available_ports.pop(0))
+            game_instances.append(threading.Thread(target=create_game_instance, args=("localhost", available_players[0], available_players[1], available_ports.pop(0))))
+            game_instances[-1].start()
+            del available_players[:2]
             print("GAME_MATCHING: 2 players deleted")
+    for game_instance in game_instances:
+        game_instance.join()
             
 def create_game_instance(address, player_1, player_2, port):
     game_board = [[" "," "," "], [" "," "," "], [" "," "," "]]
