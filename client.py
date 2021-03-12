@@ -83,6 +83,10 @@ def wait_for_game(sock):
             if data[0] == "Role":
                 role = data[1]
                 return
+            if data[0] == "Fail":
+                print("Incorrect Password!")
+                input("Press Enter to continue...")
+                sys.exit()
 
 def run_tick_tack_tocker():
     server_address = ('localhost', 1999)
