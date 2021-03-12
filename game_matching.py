@@ -30,7 +30,7 @@ def start_game_matching():
                 print("GAME_MATCHING: User does not exist. Creating new user...")
                 file.write(",".join(credentials) + "\n")
                     
-        connection.sendall("GAME_MATCHING: You are now being matched against another player.".encode())
+        connection.sendall("GAME_MATCHING: You are now being matched against another player.\n".encode())
         available_players.append(connection)
         if len(available_players) >= 2:
             print("GAME_MATCHING: 2 players found")
@@ -43,14 +43,14 @@ def create_game_instance(address, player_1, player_2, port):
     player_1_role = random.randint(1,2)
     if player_1_role == 1:
         player_1_role = "x"
-        player_1.sendall(("Role,{}".format(player_1_role)).encode())
+        player_1.sendall(("Role,{}\n".format(player_1_role)).encode())
         player_2_role = "o"
-        player_2.sendall(("Role,{}".format(player_2_role)).encode())
+        player_2.sendall(("Role,{}\n".format(player_2_role)).encode())
     else:
         player_1_role = "o"
-        player_1.sendall(("Role,{}".format(player_1_role)).encode())
+        player_1.sendall(("Role,{}\n".format(player_1_role)).encode())
         player_2_role = "x"
-        player_2.sendall(("Role,{}".format(player_2_role)).encode())
+        player_2.sendall(("Role,{}\n".format(player_2_role)).encode())
     
     print("GAME_INSTANCE: player 1 is {} and player 2 is {}".format(player_1_role, player_2_role))    
     
@@ -58,22 +58,22 @@ def create_game_instance(address, player_1, player_2, port):
         while True:
             game_board, x, y = player_1_turn(player_1, game_board, player_1_role)
             if x and y:
-                player_1.sendall(("Move,{},{}".format(x,y)).encode())
+                player_1.sendall(("Move,{},{}\n".format(x,y)).encode())
             game_board, x, y = player_2_turn(player_2, game_board, player_2_role)
             if x and y:
-                player_2.sendall(("Move,{},{}".format(x,y)).encode())
+                player_2.sendall(("Move,{},{}\n".format(x,y)).encode())
     else:
         while True:
             game_board, x, y = player_2_turn(player_2, game_board, player_2_role)
             if x and y:
-                player_2.sendall(("Move,{},{}".format(x,y)).encode())
+                player_2.sendall(("Move,{},{}\n".format(x,y)).encode())
             game_board, x, y = player_1_turn(player_1, game_board, player_1_role)
             if x and y:
-                player_1.sendall(("Move,{},{}".format(x,y)).encode())
+                player_1.sendall(("Move,{},{}\n".format(x,y)).encode())
 
 def player_1_turn(player_1, game_board, player_1_role):
     #player_1.sendall("GAME_INSTANCE: Your turn. Make a move.".encode())
-    player_1.sendall("Turn,Make a move.".encode())
+    player_1.sendall("Turn,Make a move.\n".encode())
     player_1_data = player_1.recv(64).decode()
     player_1_input = player_1_data.split(",")
     if "Move" in player_1_input:
@@ -86,7 +86,7 @@ def player_1_turn(player_1, game_board, player_1_role):
             
 def player_2_turn(player_2, game_board, player_2_role):
     #player_2.sendall("GAME_INSTANCE: Your turn. Make a move.".encode())
-    player_2.sendall("Turn,Make a move.".encode())
+    player_2.sendall("Turn,Make a move.\n".encode())
     player_2_data = player_2.recv(64).decode()
     player_2_input = player_2_data.split(",")
     if "Move" in player_2_input:
