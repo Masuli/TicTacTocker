@@ -27,9 +27,7 @@ def render_board():
 
 def handle_packet(sock, packet_data):
     data = packet_data.split(",")
-    if data[0] == "Role":
-        role = data[1]
-    elif data[0] == "Stats":
+    if data[0] == "Stats":
         if data[1] == "W":
             print("You Won :) Your stats: Wins: {}, Losses: {}")
         else:
@@ -74,6 +72,14 @@ def run_game_logic(sock):
             input("Press Enter to continue...")
             return
 
+def wait_for_game(sock):
+    print("Waiting for opponent...")
+    while True:
+        data = sock.recv(256)
+        if data[0] == "Role":
+            role = data[1]
+            break
+
 def run_tick_tack_tocker():
     server_address = ('localhost', 1999)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -84,8 +90,7 @@ def run_tick_tack_tocker():
         try:
             sock.connect(server_address)
             sock.sendall("Login,{},{}".format(username, password).encode())
-            data = sock.recv(256)
-            print(data.decode())
+            wait_for_game(sock)
             run_game_logic(sock)
         except: 
             print("Failed to connect to server.")
