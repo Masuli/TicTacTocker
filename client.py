@@ -57,7 +57,6 @@ def handle_packet(sock, packet_data):
 def recv_and_handle_packets(sock):
     recv_data = sock.recv(256)
     whole_packets = recv_data.decode().split("\n")
-    print("Recv: ", whole_packets)
     for whole_packet in whole_packets:
         handle_packet(sock, whole_packet)
 
@@ -77,12 +76,8 @@ def wait_for_game(sock):
     while True:
         recv_data = sock.recv(256)
         whole_packets = recv_data.decode().split("\n")
-        print(whole_packets)
         for whole_packet in whole_packets:
-            new_str = str(whole_packet)
-            print(new_str)
-            data = new_str.split(",")
-            print(data)
+            data = whole_packet.split(",")
             if data[0] == "Role":
                 role = data[1]
                 return
