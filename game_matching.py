@@ -43,31 +43,35 @@ def create_game_instance(address, player_1, player_2, port):
     player_1_role = random.randint(1,2)
     if player_1_role == 1:
         player_1_role = "x"
-        player_1.sendall(('GAME_INSTANCE: You are "{}" and will start.'.format(player_1_role)).encode())
+        player_1.sendall(("Role,{}".format(player_1_role)).encode())
         player_2_role = "o"
-        player_2.sendall(('GAME_INSTANCE: You are "{}" and will go second.'.format(player_2_role)).encode())
+        player_2.sendall(("Role,{}".format(player_2_role)).encode())
     else:
         player_1_role = "o"
-        player_1.sendall(('GAME_INSTANCE: You are "{}" and will go second.'.format(player_1_role)).encode())
+        player_1.sendall(("Role,{}".format(player_1_role)).encode())
         player_2_role = "x"
-        player_2.sendall(('GAME_INSTANCE: You are "{}" and will start.'.format(player_2_role)).encode())
+        player_2.sendall(("Role,{}".format(player_2_role)).encode())
     
     print("GAME_INSTANCE: player 1 is {} and player 2 is {}".format(player_1_role, player_2_role))    
     
     if player_1_role == "x":
         while True:
-            game_board = handle_player_1_turn(player_1, game_board, player_1_role)
-            #send updated board to player 1
-            game_board = handle_player_2_turn(player_2, game_board, player_2_role)
-            #send updated board to player 2
+            game_board, x, y = player_1_turn(player_1, game_board, player_1_role)
+            if x and y:
+                player_1.sendall(("Move,{},{}".format(x,y)).encode())
+            game_board, x, y = player_2_turn(player_2, game_board, player_2_role)
+            if x and y:
+                player_2.sendall(("Move,{},{}".format(x,y)).encode())
     else:
         while True:
-            game_board = handle_player_2_turn(player_2, game_board, player_2_role)
-            #send updated board to player 2
-            game_board = handle_player_1_turn(player_1, game_board, player_1_role)
-            #send updated board to player 1
+            game_board, x, y = player_2_turn(player_2, game_board, player_2_role)
+            if x and y:
+                player_2.sendall(("Move,{},{}".format(x,y)).encode())
+            game_board, x, y = player_1_turn(player_1, game_board, player_1_role)
+            if x and y:
+                player_1.sendall(("Move,{},{}".format(x,y)).encode())
 
-def handle_player_1_turn(player_1, game_board, player_1_role):
+def player_1_turn(player_1, game_board, player_1_role):
     #player_1.sendall("GAME_INSTANCE: Your turn. Make a move.".encode())
     player_1.sendall("Turn,Make a move.".encode())
     player_1_data = player_1.recv(64).decode()
@@ -80,7 +84,7 @@ def handle_player_1_turn(player_1, game_board, player_1_role):
         print("GAME_INSTANCE: No 'Move' in data. No move was made. (P1)")
         return game_board
             
-def handle_player_2_turn(player_2, game_board, player_2_role):
+def player_2_turn(player_2, game_board, player_2_role):
     #player_2.sendall("GAME_INSTANCE: Your turn. Make a move.".encode())
     player_2.sendall("Turn,Make a move.".encode())
     player_2_data = player_2.recv(64).decode()
@@ -88,10 +92,10 @@ def handle_player_2_turn(player_2, game_board, player_2_role):
     if "Move" in player_2_input:
         game_board[player_2_input[1]][player_2_input[0]] = player_2_role
         check_board_state(game_board, player_2_role)
-        return game_board
+        return game_board, player_2_input[0], player_2_input[1]
     else:
         print("GAME_INSTANCE: No 'Move' in data. No move was made. (P2)")
-        return game_board
+        return game_board, False, False
 
 def check_board_state(game_board, role):
     for i in range(3):
