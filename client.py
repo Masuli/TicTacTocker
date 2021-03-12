@@ -57,9 +57,9 @@ def handle_packet(sock, packet_data):
 def recv_and_handle_packets(sock):
     recv_data = sock.recv(256)
     whole_packets = recv_data.decode().split("\n")
+    print("Recv: ", whole_packets)
     for whole_packet in whole_packets:
-        packet_data = whole_packet.split(",")
-        handle_packet(socket, packet_data)
+        handle_packet(sock, whole_packet)
 
 def run_game_logic(sock):
     initialize_board()
@@ -67,18 +67,25 @@ def run_game_logic(sock):
     while True:
         try:
             recv_and_handle_packets(sock)
-        except:
-            print("Error occurred!")
+        except Exception as e:
+            print("Error occurred! {}".format(e))
             input("Press Enter to continue...")
             return
 
 def wait_for_game(sock):
     print("Waiting for opponent...")
     while True:
-        data = sock.recv(256)
-        if data[0] == "Role":
-            role = data[1]
-            break
+        recv_data = sock.recv(256)
+        whole_packets = recv_data.decode().split("\n")
+        print(whole_packets)
+        for whole_packet in whole_packets:
+            new_str = str(whole_packet)
+            print(new_str)
+            data = new_str.split(",")
+            print(data)
+            if data[0] == "Role":
+                role = data[1]
+                return
 
 def run_tick_tack_tocker():
     server_address = ('localhost', 1999)
