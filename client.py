@@ -31,6 +31,7 @@ def run_game_logic(sock):
     while True:
         try:
             recv_data = sock.recv(256)
+            print(recv_data.decode())
             data = recv_data.decode().split(",")
             if data[0] == "Role":
                 role = data[1]
