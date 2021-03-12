@@ -4,64 +4,71 @@ import os
 
 BOARD_WIDTH = 3
 BOARD_HEIGHT = 3
+role = 'x'
+board = []
 
-def initialize_board(board):
+def initialize_board():
     for _ in range(BOARD_WIDTH * BOARD_HEIGHT):
         board.append(" ")
 
-def get_board_value(board, x, y):
+def get_board_value(x, y):
     return board[x + BOARD_WIDTH * y]    
 
-def set_board_value(board, x, y, value):
+def set_board_value(x, y, value):
     board[x + BOARD_WIDTH * y] = value
 
-def render_board(board):
+def render_board():
     os.system("clear")
     print(" X 0 1 2")
     print("Y -------")
     for y in range(BOARD_HEIGHT):
-        print("{} |{}|{}|{}|".format(y, get_board_value(board, 0, y), get_board_value(board, 1, y), get_board_value(board, 2, y)))
+        print("{} |{}|{}|{}|".format(y, get_board_value(0, y), get_board_value(1, y), get_board_value(2, y)))
         print("  -------")
 
+def handle_packet(sock, packet_data):
+    data = packet_data.split(",")
+    if data[0] == "Role":
+        role = data[1]
+    elif data[0] == "Stats":
+        if data[1] == "W":
+            print("You Won :) Your stats: Wins: {}, Losses: {}")
+        else:
+            print("You Lost :( Your stats: Wins: {}, Losses: {}")
+        input("Press Enter to continue...")
+        return
+    elif data[0] == "Move":
+        if role == 'x':
+            set_board_value(int(data[1]), int(data[2]), 'o')
+        else:
+            set_board_value(int(data[1]), int(data[2]), 'x')
+        render_board()
+    elif data[0] == "Turn":
+        while True:
+            try:
+                x = int(input("Move to x: "))
+                y = int(input("Move to y: "))
+                if x >= 3 or y >= 3 or x < 0 or y < 0 or  get_board_value(x, y) != " ":
+                    raise ValueError("")
+                else:
+                    break
+            except ValueError:
+                print("Invalid Position or entered value!")
+        set_board_value(x, y, role)
+        sock.sendall("Move,{},{}".format(x, y).encode())
+
+def recv_and_handle_packets(sock):
+    recv_data = sock.recv(256)
+    whole_packets = recv_data.decode().split("\n")
+    for whole_packet in whole_packets:
+        packet_data = whole_packet.split(",")
+        handle_packet(socket, packet_data)
+
 def run_game_logic(sock):
-    role = 'X'
-    board = []
-    initialize_board(board)
-    render_board(board)
+    initialize_board()
+    render_board()
     while True:
         try:
-            recv_data = sock.recv(256)
-            print(recv_data.decode())
-            data = recv_data.decode().split(",")
-            if data[0] == "Role":
-                role = data[1]
-            elif data[0] == "Stats":
-                if data[1] == "W":
-                    print("You Won :) Your stats: Wins: {}, Losses: {}")
-                else:
-                    print("You Lost :( Your stats: Wins: {}, Losses: {}")
-                input("Press Enter to continue...")
-                return
-            elif data[0] == "Move":
-                if role == 'X':
-                    set_board_value(board, int(data[1]), int(data[2]), 'O')
-                else:
-                    set_board_value(board, int(data[1]), int(data[2]), 'X')
-                render_board(board)
-            elif data[0] == "Turn":
-                try:
-                    x = int(input("Move to X: "))
-                    y = int(input("Move to Y: "))
-                    if x >= 3 or y >= 3 or x < 0 or y < 0 or  get_board_value(board, x, y) != " ":
-                        raise ValueError("")
-                except ValueError:
-                    print("Invalid Position or entered value!")
-
-                if x < 3 and y < 3 and x >= 0 and y >= 0 and get_board_value(board, x, y) == " ":
-                    set_board_value(board, x, y, role)
-                    sock.sendall("Move,{},{}".format(x, y).encode())
-                else:
-                    print("Invalid Board Position!!")
+            recv_and_handle_packets(sock)
         except:
             print("Error occurred!")
             input("Press Enter to continue...")
@@ -73,7 +80,7 @@ def run_tick_tack_tocker():
     username = input("Enter Username: ")
     password = input("Enter Password: ")
 
-    if len(username) > 1 and len(password) > 1:
+    if len(username) >= 1 and len(password) >= 1:
         try:
             sock.connect(server_address)
             sock.sendall("Login,{},{}".format(username, password).encode())
