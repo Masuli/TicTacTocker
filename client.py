@@ -28,10 +28,12 @@ def render_board():
 def handle_packet(sock, packet_data):
     data = packet_data.split(",")
     if data[0] == "Stats":
-        if data[1] == "W":
-            print("You Won :) Your stats: Wins: {}, Losses: {}")
-        else:
-            print("You Lost :( Your stats: Wins: {}, Losses: {}")
+        if data[1] == "w":
+            print("You Won :) Your stats: Wins: {}, Losses: {}, Ties: {}".format(data[2], data[3], data[4]))
+        elif data[1] == "l":
+            print("You Lost :( Your stats: Wins: {}, Losses: {}, Ties: {}".format(data[2], data[3], data[4]))
+        elif data[1] == "t":
+            print("Tie! Your stats: Wins: {}, Losses: {}, Ties: {}".format(data[2], data[3], data[4]))
         input("Press Enter to continue...")
         return
     elif data[0] == "Move":
