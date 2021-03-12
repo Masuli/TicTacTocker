@@ -35,7 +35,8 @@ def handle_packet(sock, packet_data):
         elif data[1] == "t":
             print("Tie! Your stats: Wins: {}, Losses: {}, Ties: {}".format(data[2], data[3], data[4]))
         input("Press Enter to continue...")
-        return
+        sock.close()
+        sys.exit()
     elif data[0] == "Move":
         if role == 'x':
             set_board_value(int(data[1]), int(data[2]), 'o')
@@ -102,7 +103,7 @@ def run_tick_tack_tocker():
             sock.sendall("Login,{},{}".format(username, password).encode())
             wait_for_game(sock)
             run_game_logic(sock)
-        except: 
+        except Exception: 
             print("Failed to connect to server.")
             input("Press Enter to continue...")
         sock.close()
