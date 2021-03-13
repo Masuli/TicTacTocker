@@ -76,20 +76,28 @@ def create_game_instance(player_1, player_2):
     
     if player_1_role == "x":
         while True:
-            game_board, x, y = player_1_turn(player_1, player_2, game_board, player_1_role, player_1_name, player_2_name)
+            game_board, x, y, result = player_1_turn(player_1, player_2, game_board, player_1_role, player_1_name, player_2_name)
             if x and y:
                 player_2.sendall(("Move,{},{}\n".format(x,y)).encode())
-            game_board, x, y = player_2_turn(player_2, player_2, game_board, player_2_role, player_2_name, player_1_name)
+            if result:
+                win_game_or_tie(player_1, player_2, player_1_role, result, player_1_name, player_2_name, game_board)
+            game_board, x, y, result = player_2_turn(player_2, player_2, game_board, player_2_role, player_2_name, player_1_name)
             if x and y:
                 player_1.sendall(("Move,{},{}\n".format(x,y)).encode())
+            if result:
+                win_game_or_tie(player_2, player_1, player_2_role, result, player_2_name, player_1_name, game_board)
     else:
         while True:
-            game_board, x, y = player_2_turn(player_2, player_1, game_board, player_2_role, player_2_name, player_1_name)
+            game_board, x, y, result = player_2_turn(player_2, player_1, game_board, player_2_role, player_2_name, player_1_name)
             if x and y:
                 player_1.sendall(("Move,{},{}\n".format(x,y)).encode())
-            game_board, x, y = player_1_turn(player_1, player_2, game_board, player_1_role, player_1_name, player_2_name)
+            if result:
+                win_game_or_tie(player_2, player_1, player_2_role, result, player_2_name, player_1_name, game_board)
+            game_board, x, y, result = player_1_turn(player_1, player_2, game_board, player_1_role, player_1_name, player_2_name)
             if x and y:
                 player_2.sendall(("Move,{},{}\n".format(x,y)).encode())
+            if result:
+                win_game_or_tie(player_1, player_2, player_1_role, result, player_1_name, player_2_name, game_board)
 
 def player_1_turn(player_1, player_2, game_board, player_1_role, player_1_name, player_2_name):
     player_1.sendall("Turn,Make a move.\n".encode())
@@ -97,12 +105,10 @@ def player_1_turn(player_1, player_2, game_board, player_1_role, player_1_name, 
     if "Move" in player_1_data:
         game_board[int(player_1_data[2])][int(player_1_data[1])] = player_1_role
         result = check_board_state(game_board, player_1_role)
-        if (result == "win" or result == "tie"):
-            win_game_or_tie(player_1, player_2, player_1_role, result, player_1_name, player_2_name, game_board)
-        return game_board, player_1_data[1], player_1_data[2]
+        return game_board, player_1_data[1], player_1_data[2], result
     else:
         print("GAME_INSTANCE: No 'Move' in data. No move was made. (P1)")
-        return game_board, False, False
+        return game_board, False, False, result
             
 def player_2_turn(player_2, player_1, game_board, player_2_role, player_2_name, player_1_name):
     player_2.sendall("Turn,Make a move.\n".encode())
@@ -110,12 +116,10 @@ def player_2_turn(player_2, player_1, game_board, player_2_role, player_2_name, 
     if "Move" in player_2_data:
         game_board[int(player_2_data[2])][int(player_2_data[1])] = player_2_role
         result = check_board_state(game_board, player_2_role)
-        if (result == "win" or result == "tie"):
-            win_game_or_tie(player_2, player_1, player_2_role, result, player_2_name, player_1_name, game_board)
-        return game_board, player_2_data[1], player_2_data[2]
+        return game_board, player_2_data[1], player_2_data[2], result
     else:
         print("GAME_INSTANCE: No 'Move' in data. No move was made. (P2)")
-        return game_board, False, False
+        return game_board, False, False, False
 
 def check_board_state(game_board, role):
     for i in range(3):
@@ -158,12 +162,14 @@ def win_game_or_tie(winner, loser, winning_role, result, winner_name, loser_name
                 winner.sendall(("Stats,t,{},{},{}".format(stats[1], stats[2], stats[3])).encode())
                 loser.sendall(("Stats,t,{},{},{}".format(stats[4], stats[5], stats[6])).encode())
         sock.close()
+        sys.exit(0)
     except: 
         print("Failed to connect to server.")
         input("Press Enter to continue...")
         sock.close()
-    for i in range(3):
-        print(game_board[i])
+        sys.exit(1)
+    #for i in range(3):
+       #print(game_board[i])
     
 if __name__ == "__main__":
     start_game_matching()
