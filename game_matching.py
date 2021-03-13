@@ -7,7 +7,7 @@ import threading
 
 GAME_MATCHING_PORT = 1999
 GAME_STATS_PORT = 1998
-available_ports = [i for i in range(2000, 3000)]
+#available_ports = [i for i in range(2000, 3000)]
 
 def start_game_matching():
     available_players = []
@@ -22,30 +22,38 @@ def start_game_matching():
         print("GAME_MATCHING: Listening for connections...")
         connection, client_address = sock.accept()
         credentials = connection.recv(256).decode().split(",")[1:]
-        if not os.path.isfile("credentials.txt"):
-            open("credentials.txt", "w").close()
-            
-        with open("credentials.txt", "r+") as file:
-            lines = [line.rstrip() for line in file]
-            if ",".join(credentials) in lines:
-                print("GAME_MATCHING: User exists.")
-            else:
-                print("GAME_MATCHING: User does not exist. Creating new user...")
-                file.write(",".join(credentials) + "\n")
+        result = check_login_details(credentials)
                     
         connection.sendall("GAME_MATCHING: You are now being matched against another player.\n".encode())
         available_players.append((connection, credentials[0]))
         if len(available_players) >= 2:
             print("GAME_MATCHING: 2 players found")
-            #create_game_instance("localhost", available_players[0], available_players[1], available_ports.pop(0))
-            game_instances.append(threading.Thread(target=create_game_instance, args=("localhost", available_players[0], available_players[1], available_ports.pop(0))))
+            #create_game_instance(available_players[0], available_players[1], available_ports.pop(0))
+            game_instances.append(threading.Thread(target=create_game_instance, args=(available_players[0], available_players[1])))
             game_instances[-1].start()
             del available_players[:2]
             print("GAME_MATCHING: 2 players deleted")
     for game_instance in game_instances:
         game_instance.join()
+
+def check_login_details(credentials):
+    if not os.path.isfile("credentials.txt"):
+        open("credentials.txt", "w").close()
             
-def create_game_instance(address, player_1, player_2, port):
+    with open("credentials.txt", "r+") as file:
+        lines = [line.rstrip() for line in file]
+        for line in lines:
+            username, password = line.split(",")
+            if credentials[0] == username and credentials[1] == password:
+                print("GAME_MATCHING: {} logged in.".format(username))
+                return True
+            elif credentials[0] == username and credentials[1] != password:
+                print("GAME_MATCHING: Invalid password")
+                return True
+        print("GAME_MATCHING: User does not exist. Creating new user...")
+        file.write(",".join(credentials) + "\n")
+
+def create_game_instance(player_1, player_2):
     game_board = [[" "," "," "], [" "," "," "], [" "," "," "]]
     player_1_name = player_1[1]
     player_1 = player_1[0]
