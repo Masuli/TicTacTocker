@@ -6,6 +6,7 @@ BOARD_WIDTH = 3
 BOARD_HEIGHT = 3
 role = 'x'
 board = []
+client_id = ""
 
 def initialize_board():
     for _ in range(BOARD_WIDTH * BOARD_HEIGHT):
@@ -18,6 +19,7 @@ def set_board_value(x, y, value):
     board[x + BOARD_WIDTH * y] = value
 
 def render_board():
+    return
     os.system("clear")
     print(" X 0 1 2")
     print("Y -------")
@@ -35,11 +37,11 @@ def handle_packet(sock, packet_data):
     data = packet_data.split(",")
     if data[0] == "Stats":
         if data[1] == "w":
-            print("You Won :) Your stats: Wins: {}, Losses: {}, Ties: {}".format(data[2], data[3], data[4]))
+            print("{} You Won :) Your stats: Wins: {}, Losses: {}, Ties: {}".format(client_id, data[2], data[3], data[4]))
         elif data[1] == "l":
-            print("You Lost :( Your stats: Wins: {}, Losses: {}, Ties: {}".format(data[2], data[3], data[4]))
+            print("{} You Lost :( Your stats: Wins: {}, Losses: {}, Ties: {}".format(client_id, data[2], data[3], data[4]))
         elif data[1] == "t":
-            print("Tie! Your stats: Wins: {}, Losses: {}, Ties: {}".format(data[2], data[3], data[4]))
+            print("{} Tie! Your stats: Wins: {}, Losses: {}, Ties: {}".format(client_id, data[2], data[3], data[4]))
         sock.close()
         sys.exit()
     elif data[0] == "Move":
@@ -93,10 +95,11 @@ def wait_for_game(sock):
                 print("Incorrect Password!")
                 sys.exit()
 
-def run_tick_tack_tocker(client_id):
+def run_tick_tack_tocker(args):
     server_address = ('localhost', 1999)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print(client_id)
+    global client_id
+    client_id = args
     if len(client_id) >= 1 and len(client_id) >= 1:
         try:
             sock.connect(server_address)
