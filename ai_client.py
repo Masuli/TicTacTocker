@@ -1,12 +1,14 @@
 import socket
 import sys
 import os
+import time
 
 BOARD_WIDTH = 3
 BOARD_HEIGHT = 3
 role = 'x'
 board = []
 client_id = ""
+delta = 0.0
 
 def initialize_board():
     for _ in range(BOARD_WIDTH * BOARD_HEIGHT):
@@ -42,6 +44,15 @@ def handle_packet(sock, packet_data):
             print("{} You Lost :( Your stats: Wins: {}, Losses: {}, Ties: {}".format(client_id, data[2], data[3], data[4]))
         elif data[1] == "t":
             print("{} Tie! Your stats: Wins: {}, Losses: {}, Ties: {}".format(client_id, data[2], data[3], data[4]))
+        global delta
+        while True:
+            try:
+                stats = open("latency.txt", "a")
+                stats.write("{}\n".format(delta))
+                stats.close()
+                break
+            except:
+                pass
         sock.close()
         sys.exit()
     elif data[0] == "Move":
@@ -65,7 +76,12 @@ def handle_packet(sock, packet_data):
         sock.sendall("Move,{},{}".format(x, y).encode())
 
 def recv_and_handle_packets(sock):
+    start_time = time.time()
     recv_data = sock.recv(256)
+    delta_time = time.time() - start_time
+    global delta
+    if delta_time > delta:
+        delta = delta_time
     whole_packets = recv_data.decode().split("\n")
     for whole_packet in whole_packets:
         handle_packet(sock, whole_packet)
@@ -81,7 +97,7 @@ def run_game_logic(sock):
             return
 
 def wait_for_game(sock):
-    print("Waiting for opponent...")
+    #print("Waiting for opponent...")
     global role
     while True:
         recv_data = sock.recv(256)
@@ -96,6 +112,7 @@ def wait_for_game(sock):
                 sys.exit()
 
 def run_tick_tack_tocker(args):
+    
     server_address = ('localhost', 1999)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     global client_id
@@ -106,8 +123,9 @@ def run_tick_tack_tocker(args):
             sock.sendall("Login,{},{}".format(client_id, client_id).encode())
             wait_for_game(sock)
             run_game_logic(sock)
-        except Exception: 
-            print("Failed to connect to server.")
+            print("{} Exit successfully.".format(client_id))
+        except Exception as e: 
+            print("Failed to connect to server. {}".format(e))
         sock.close()
 
 if __name__ == "__main__":

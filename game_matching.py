@@ -3,6 +3,7 @@ import sys
 import random
 import os
 import threading
+import psutil
 
 
 GAME_MATCHING_PORT = 1999
@@ -54,6 +55,17 @@ def check_login_details(credentials):
         file.write(",".join(credentials) + "\n")
 
 def create_game_instance(player_1, player_2):
+    process = psutil.Process(os.getpid())
+    while True:
+        try:
+            stats = open("memory.txt", "a")
+            stats.write("{}\n".format(process.memory_info().rss))
+            stats.close()
+            break
+        except:
+            pass
+
+
     game_board = [[" "," "," "], [" "," "," "], [" "," "," "]]
     player_1_name = player_1[1]
     player_1 = player_1[0]
