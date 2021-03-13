@@ -32,7 +32,7 @@ def start_game_matching():
             game_instances.append(threading.Thread(target=create_game_instance, args=(available_players[0], available_players[1])))
             game_instances[-1].start()
             del available_players[:2]
-            print("GAME_MATCHING: 2 players deleted")
+            #print("GAME_MATCHING: 2 players deleted")
     for game_instance in game_instances:
         game_instance.join()
 
@@ -72,7 +72,7 @@ def create_game_instance(player_1, player_2):
         player_2_role = "x"
         player_2.sendall(("Role,{}\n".format(player_2_role)).encode())
     
-    print("GAME_INSTANCE: player 1 is {} and player 2 is {}".format(player_1_role, player_2_role))    
+    print("GAME_INSTANCE: {} is {} and {} is {}".format(player_1_name, player_1_role, player_2_name, player_2_role))    
     
     if player_1_role == "x":
         while True:
@@ -163,8 +163,8 @@ def win_game_or_tie(winner, loser, winning_role, result, winner_name, loser_name
                 loser.sendall(("Stats,t,{},{},{}".format(stats[4], stats[5], stats[6])).encode())
         sock.close()
         sys.exit(0)
-    except: 
-        print("Failed to connect to server.")
+    except Exception: 
+        print("Failed to connect to server. SERVER")
         input("Press Enter to continue...")
         sock.close()
         sys.exit(1)
