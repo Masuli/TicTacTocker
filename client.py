@@ -79,7 +79,7 @@ def wait_for_game(sock):
     print("Waiting for opponent...")
     global role
     while True:
-        recv_data = sock.recv(256)
+        recv_data = sock.recv(7)
         whole_packets = recv_data.decode().split("\n")
         for whole_packet in whole_packets:
             data = whole_packet.split(",")
@@ -92,7 +92,7 @@ def wait_for_game(sock):
                 sys.exit()
 
 def run_tick_tack_tocker():
-    server_address = ('localhost', 1999)
+    server_address = ("localhost", 1999)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     username = input("Enter Username: ")
     password = input("Enter Password: ")
@@ -103,8 +103,8 @@ def run_tick_tack_tocker():
             sock.sendall("Login,{},{}".format(username, password).encode())
             wait_for_game(sock)
             run_game_logic(sock)
-        except Exception: 
-            print("Failed to connect to server.")
+        except Exception as e: 
+            print("Failed to connect to server. {}".format(e))
             input("Press Enter to continue...")
         sock.close()
 

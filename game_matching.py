@@ -5,17 +5,15 @@ import os
 import threading
 import psutil
 
-
 GAME_MATCHING_PORT = 1999
 GAME_STATS_PORT = 1998
-#available_ports = [i for i in range(2000, 3000)]
 
 def start_game_matching():
     available_players = []
     game_instances = []
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ("localhost", GAME_MATCHING_PORT)
+    server_address = ("0.0.0.0", GAME_MATCHING_PORT)
     sock.bind(server_address)
     sock.listen(1)
     
@@ -23,6 +21,9 @@ def start_game_matching():
         print("GAME_MATCHING: Listening for connections...")
         connection, client_address = sock.accept()
         credentials = connection.recv(256).decode().split(",")[1:]
+        if not credentials:
+        	connection.close()
+        	continue
         result = check_login_details(credentials)
                     
         connection.sendall("GAME_MATCHING: You are now being matched against another player.\n".encode())
@@ -64,7 +65,6 @@ def create_game_instance(player_1, player_2):
             break
         except:
             pass
-
 
     game_board = [[" "," "," "], [" "," "," "], [" "," "," "]]
     player_1_name = player_1[1]
@@ -156,7 +156,7 @@ def check_board_state(game_board, role):
     return False
         
 def win_game_or_tie(winner, loser, winning_role, result, winner_name, loser_name, game_board):
-    server_address = ('localhost', 1998)
+    server_address = ("localhost", GAME_STATS_PORT)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.connect(server_address)
@@ -175,7 +175,7 @@ def win_game_or_tie(winner, loser, winning_role, result, winner_name, loser_name
                 loser.sendall(("Stats,t,{},{},{}".format(stats[4], stats[5], stats[6])).encode())
         sock.close()
         sys.exit(0)
-    except Exception: 
+    except Exception:
         print("Failed to connect to server. SERVER")
         input("Press Enter to continue...")
         sock.close()

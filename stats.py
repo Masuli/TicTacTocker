@@ -57,7 +57,7 @@ def add_player_stats(player_name, result):
 
 def run_status_server():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ("localhost", 1998)
+    server_address = ("0.0.0.0", 1998)
     sock.bind(server_address)
     sock.listen(1)
     
