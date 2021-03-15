@@ -47,9 +47,8 @@ def handle_packet(sock, packet_data):
         global delta
         while True:
             try:
-                stats = open("latency.txt", "a")
-                stats.write("{}\n".format(delta))
-                stats.close()
+                with open("latency.txt", "a") as stats:
+                    stats.write("{}\n".format(delta))
                 break
             except:
                 pass
@@ -120,7 +119,6 @@ def run_tick_tack_tocker(args):
     if len(client_id) >= 1 and len(client_id) >= 1:
         try:
             sock.connect(server_address)
-            print("Login,{},{}".format(client_id, client_id))
             sock.sendall("Login,{},{}".format(client_id, client_id).encode())
             wait_for_game(sock)
             run_game_logic(sock)

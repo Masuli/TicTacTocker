@@ -15,26 +15,20 @@ def start_game_matching():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = ("0.0.0.0", GAME_MATCHING_PORT)
     sock.bind(server_address)
-    sock.listen(1)
+    sock.listen(100)
     
     while True:
         print("GAME_MATCHING: Listening for connections...")
         connection, client_address = sock.accept()
         credentials = connection.recv(256).decode().split(",")[1:]
-        if not credentials:
-        	connection.close()
-        	continue
         result = check_login_details(credentials)
                     
         connection.sendall("GAME_MATCHING: You are now being matched against another player.\n".encode())
         available_players.append((connection, credentials[0]))
         if len(available_players) >= 2:
-            print("GAME_MATCHING: 2 players found")
-            #create_game_instance(available_players[0], available_players[1], available_ports.pop(0))
             game_instances.append(threading.Thread(target=create_game_instance, args=(available_players[0], available_players[1])))
             game_instances[-1].start()
             del available_players[:2]
-            #print("GAME_MATCHING: 2 players deleted")
     for game_instance in game_instances:
         game_instance.join()
 
@@ -59,9 +53,8 @@ def create_game_instance(player_1, player_2):
     process = psutil.Process(os.getpid())
     while True:
         try:
-            stats = open("memory.txt", "a")
-            stats.write("{}\n".format(process.memory_info().rss))
-            stats.close()
+            with open("memory.txt", "a") as stats:
+                stats.write("{}\n".format(process.memory_info().rss))
             break
         except:
             pass
@@ -93,6 +86,7 @@ def create_game_instance(player_1, player_2):
                 player_2.sendall(("Move,{},{}\n".format(x,y)).encode())
             if result:
                 win_game_or_tie(player_1, player_2, player_1_role, result, player_1_name, player_2_name, game_board)
+                
             game_board, x, y, result = player_2_turn(player_2, player_2, game_board, player_2_role, player_2_name, player_1_name)
             if x and y:
                 player_1.sendall(("Move,{},{}\n".format(x,y)).encode())
@@ -105,6 +99,7 @@ def create_game_instance(player_1, player_2):
                 player_1.sendall(("Move,{},{}\n".format(x,y)).encode())
             if result:
                 win_game_or_tie(player_2, player_1, player_2_role, result, player_2_name, player_1_name, game_board)
+                
             game_board, x, y, result = player_1_turn(player_1, player_2, game_board, player_1_role, player_1_name, player_2_name)
             if x and y:
                 player_2.sendall(("Move,{},{}\n".format(x,y)).encode())
@@ -176,12 +171,10 @@ def win_game_or_tie(winner, loser, winning_role, result, winner_name, loser_name
         sock.close()
         sys.exit(0)
     except Exception:
-        print("Failed to connect to server. SERVER")
+        print("GAME_INSTANCE: Failed to connect to server.")
         input("Press Enter to continue...")
         sock.close()
         sys.exit(1)
-    #for i in range(3):
-       #print(game_board[i])
     
 if __name__ == "__main__":
     start_game_matching()
